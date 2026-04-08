@@ -1,0 +1,18 @@
+const URL = "https://script.google.com/macros/s/AKfycbzfW176P5AJADqdn2vY-9oyYmBmchw4eyp3OBGNeLZTGhYJYgyV9iQ2AWyLc3zkPWQI/exec";
+
+// RESERVAR
+function reservar() {
+  let nombre = document.getElementById("nombre").value;
+  let cancha = document.getElementById("cancha").value;
+  let fecha = document.getElementById("fecha").value;
+  let hora = document.getElementById("hora").value;
+
+  fetch(URL, {
+    method: "POST",
+    body: JSON.stringify({ nombre, cancha, fecha, hora })
+  })
+  .then(res => res.text())
+  .then(() => {
+    document.getElementById("estado").innerText = "✅ Reserva guardada";
+  });
+}
