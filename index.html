@@ -1,4 +1,71 @@
-const URL = "https://script.google.com/macros/s/AKfycbzfW176P5AJADqdn2vY-9oyYmBmchw4eyp3OBGNeLZTGhYJYgyV9iQ2AWyLc3zkPWQI/exec";
+const URL = "https://script.google.com/macros/s/AKfycbwL2O5WFoV3VmfR-CXkmvbzFzTEaM2uehCof5f87EbRqld4qIdyApf1Ok54eKiFGeB0/exec";
+
+// CAMBIAR SECCIONES
+function mostrarSeccion(seccion) {
+  document.getElementById("reservas").style.display = "none";
+  document.getElementById("torneos").style.display = "none";
+  document.getElementById("admin").style.display = "none";
+
+  document.getElementById(seccion).style.display = "block";
+}
+
+// LOGIN ADMIN
+function loginAdmin() {
+  let pass = prompt("Contraseña");
+
+  if (pass === "admin123") {
+    mostrarSeccion("admin");
+  } else {
+    alert("Acceso denegado");
+  }
+}
+
+// HORARIOS
+const horarios = ["13:30","15:00","16:30","18:00","19:30","21:00","22:30"];
+
+function cargarHorarios() {
+  let select = document.getElementById("hora");
+  select.innerHTML = "";
+
+  horarios.forEach(h => {
+    let option = document.createElement("option");
+    option.value = h;
+    option.textContent = h;
+    select.appendChild(option);
+  });
+}
+
+// VER DISPONIBILIDAD
+function verificarDisponibilidad() {
+  let cancha = document.getElementById("cancha").value;
+  let fecha = document.getElementById("fecha").value;
+
+  fetch(URL)
+    .then(res => res.json())
+    .then(data => {
+
+      let ocupados = data.filter(r =>
+        r[1] === cancha && r[2] === fecha
+      ).map(r => r[3]);
+
+      let select = document.getElementById("hora");
+      select.innerHTML = "";
+
+      horarios.forEach(h => {
+        let option = document.createElement("option");
+        option.value = h;
+
+        if (ocupados.includes(h)) {
+          option.textContent = h + " ❌ Ocupado";
+          option.disabled = true;
+        } else {
+          option.textContent = h + " ✅ Disponible";
+        }
+
+        select.appendChild(option);
+      });
+    });
+}
 
 // RESERVAR
 function reservar() {
@@ -12,7 +79,42 @@ function reservar() {
     body: JSON.stringify({ nombre, cancha, fecha, hora })
   })
   .then(res => res.text())
-  .then(() => {
-    document.getElementById("estado").innerText = "✅ Reserva guardada";
+  .then(res => {
+    if (res === "OCUPADO") {
+      document.getElementById("estado").innerText = "❌ Ya ocupado";
+    } else {
+      document.getElementById("estado").innerText = "✅ Reserva confirmada";
+      verificarDisponibilidad();
+    }
   });
+}
+
+// AGREGAR TORNEO
+function agregarTorneo() {
+  let nombre = document.getElementById("torneoNombre").value;
+  let fecha = document.getElementById("torneoFecha").value;
+
+  fetch(URL, {
+    method: "POST",
+    body: JSON.stringify({ tipo: "torneo", nombre, fecha })
+  });
+
+  alert("Torneo agregado");
+}
+
+// MOSTRAR TORNEOS
+function cargarTorneos() {
+  fetch(URL)
+    .then(res => res.json())
+    .then(data => {
+
+      let lista = document.getElementById("listaTorneos");
+      lista.innerHTML = "";
+
+      data.forEach(t => {
+        let li = document.createElement("li");
+        li.textContent = t[0] + " - " + t[1];
+        lista.appendChild(li);
+      });
+    });
 }
